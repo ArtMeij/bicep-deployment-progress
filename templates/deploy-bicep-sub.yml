@@ -1,0 +1,32 @@
+parameters:
+  - name: azureServiceConnection
+    type: string
+  - name: deploymentName
+    type: string
+  - name: location
+    type: string
+  - name: templateFile
+    type: string
+  - name: parameterFile
+    type: string
+
+steps:
+  - task: AzureCLI@2
+    displayName: Deploy Bicep (Subscription level)
+    inputs:
+      azureSubscription: ${{ parameters.azureServiceConnection }}
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        DEPLOYMENT="${{ parameters.deploymentName }}-$(Build.BuildId)"
+
+        echo -e "Starting deployment: $DEPLOYMENT"
+
+        az deployment sub create \
+          --name "$DEPLOYMENT" \
+          --location "${{ parameters.location }}" \
+          --template-file "${{ parameters.templateFile }}" \
+          --parameters "${{ parameters.parameterFile }}" \
+          --no-wait
+
+        bash $(System.DefaultWorkingDirectory)/scripts/monitor-bicep-deployment.sh sub "" "$DEPLOYMENT"

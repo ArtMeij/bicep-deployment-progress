@@ -1,0 +1,31 @@
+parameters:
+  - name: azureServiceConnection
+    type: string
+  - name: resourceGroupName
+    type: string
+  - name: deploymentName
+    type: string
+  - name: templateFile
+    type: string
+  - name: parameterFile
+    type: string
+
+steps:
+  - task: AzureCLI@2
+    displayName: Deploy Bicep (RG level)
+    inputs:
+      azureSubscription: ${{ parameters.azureServiceConnection }}
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        DEPLOYMENT="${{ parameters.deploymentName }}"
+        RG="${{ parameters.resourceGroupName }}"
+
+        az deployment group create \
+          --name "$DEPLOYMENT-$(Build.BuildId)" \
+          --resource-group "$RG" \
+          --template-file "${{ parameters.templateFile }}" \
+          --parameters "${{ parameters.parameterFile }}" \
+          --no-wait
+
+        bash $(System.DefaultWorkingDirectory)/scripts/monitor-deployment.sh group "$RG" "$DEPLOYMENT"
