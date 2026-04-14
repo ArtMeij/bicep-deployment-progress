@@ -25,7 +25,6 @@ while true; do
 
   echo ""
   echo -e "${BLUE}===== $(date) | Elapsed: ${ELAPSED_MIN} min =====${NC}"
-    echo -e "${BLUE}==== Overall status: $STATUS ===={NC}"
 
   # Fetch operations
   if [[ "$SCOPE" == "sub" ]]; then
@@ -35,6 +34,8 @@ while true; do
     OPS_JSON=$(az deployment operation group list --resource-group "$RG" --name "$DEPLOYMENT" -o json 2>/dev/null || echo "[]")
     STATUS=$(az deployment group show --resource-group "$RG" --name "$DEPLOYMENT" --query "properties.provisioningState" -o tsv 2>/dev/null || echo "Running")
   fi
+
+  echo -e "${BLUE}===== Overall status: $STATUS =====${NC}"
 
   TOTAL=$(echo "$OPS_JSON" | jq length)
   SUCCEEDED=$(echo "$OPS_JSON" | jq '[.[] | select(.properties.provisioningState=="Succeeded")] | length')
