@@ -18,14 +18,14 @@ steps:
       scriptType: bash
       scriptLocation: inlineScript
       inlineScript: |
-        DEPLOYMENT="${{ parameters.deploymentName }}"
+        DEPLOYMENT="${{ parameters.deploymentName }}-$(Build.BuildId)"
         RG="${{ parameters.resourceGroupName }}"
 
         az deployment group create \
-          --name "$DEPLOYMENT-$(Build.BuildId)" \
+          --name "$DEPLOYMENT" \
           --resource-group "$RG" \
           --template-file "${{ parameters.templateFile }}" \
           --parameters "${{ parameters.parameterFile }}" \
           --no-wait
 
-        bash $(System.DefaultWorkingDirectory)/scripts/monitor-deployment.sh group "$RG" "$DEPLOYMENT"
+        bash $(System.DefaultWorkingDirectory)/scripts/monitor-bicep-deployment.sh group "$RG" "$DEPLOYMENT"
