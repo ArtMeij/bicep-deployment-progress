@@ -62,7 +62,7 @@ while true; do
     COLOR=$YELLOW
   fi
 
-  echo -e "${YELLOW} [${FILLED_BAR}${EMPTY_BAR}] ${PERCENT}% (${SUCCEEDED}/${TOTAL})${NC}"
+  echo -e "${COLOR} [${FILLED_BAR}${EMPTY_BAR}] ${PERCENT}% (${SUCCEEDED}/${TOTAL})${NC}"
   
   # Resource states
   RUNNING=$(echo "$OPS_JSON" | jq -r '
