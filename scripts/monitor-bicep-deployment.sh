@@ -1,12 +1,51 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+usage() {
+  cat <<'EOF'
+Usage:
+  monitor-bicep-deployment.sh <scope> <resource-group> <deployment-name>
+
+Arguments:
+  scope            Deployment scope: sub | group
+  resource-group   Resource group name (use "" for sub scope)
+  deployment-name  Name of the deployment to monitor
+
+Environment variables:
+  INTERVAL         Poll interval in seconds (default: 10)
+  MAX_MINUTES      Max monitoring time in minutes (default: 60)
+EOF
+}
+
+if [[ $# -ne 3 ]]; then
+  usage
+  exit 1
+fi
+
 SCOPE=$1          # sub | group
 RG=$2             # empty if sub
 DEPLOYMENT=$3
 
-INTERVAL=10
-MAX_MINUTES=60
+if [[ "$SCOPE" != "sub" && "$SCOPE" != "group" ]]; then
+  echo "Error: scope must be 'sub' or 'group'." >&2
+  usage
+  exit 1
+fi
+
+if [[ "$SCOPE" == "group" && -z "$RG" ]]; then
+  echo "Error: resource-group is required when scope is 'group'." >&2
+  usage
+  exit 1
+fi
+
+if [[ -z "$DEPLOYMENT" ]]; then
+  echo "Error: deployment-name is required." >&2
+  usage
+  exit 1
+fi
+
+INTERVAL="${INTERVAL:-10}"
+MAX_MINUTES="${MAX_MINUTES:-60}"
 START_TIME=$(date +%s)
 
 # 🎨 Colors
@@ -62,7 +101,7 @@ while true; do
     COLOR=$YELLOW
   fi
 
-  echo -e "${YELLOW} [${FILLED_BAR}${EMPTY_BAR}] ${PERCENT}% (${SUCCEEDED}/${TOTAL})${NC}"
+  echo -e "${COLOR} [${FILLED_BAR}${EMPTY_BAR}] ${PERCENT}% (${SUCCEEDED}/${TOTAL})${NC}"
   
   # Resource states
   RUNNING=$(echo "$OPS_JSON" | jq -r '

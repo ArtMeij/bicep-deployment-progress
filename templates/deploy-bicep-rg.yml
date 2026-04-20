@@ -9,6 +9,12 @@ parameters:
     type: string
   - name: parameterFile
     type: string
+  - name: noWait
+    type: string
+    default: "true"
+  - name: deploymentNameSuffix
+    type: string
+    default: "$(Build.BuildId)"
 
 steps:
   - task: AzureCLI@2
@@ -18,14 +24,21 @@ steps:
       scriptType: bash
       scriptLocation: inlineScript
       inlineScript: |
-        DEPLOYMENT="${{ parameters.deploymentName }}-$(Build.BuildId)"
+        DEPLOYMENT="${{ parameters.deploymentName }}"
+        if [[ -n "${{ parameters.deploymentNameSuffix }}" ]]; then
+          DEPLOYMENT="${DEPLOYMENT}-${{ parameters.deploymentNameSuffix }}"
+        fi
         RG="${{ parameters.resourceGroupName }}"
+        NO_WAIT_ARG=""
+        if [[ "${{ parameters.noWait }}" == "true" ]]; then
+          NO_WAIT_ARG="--no-wait"
+        fi
 
         az deployment group create \
           --name "$DEPLOYMENT" \
           --resource-group "$RG" \
           --template-file "${{ parameters.templateFile }}" \
           --parameters "${{ parameters.parameterFile }}" \
-          --no-wait
+          $NO_WAIT_ARG
 
         bash $(System.DefaultWorkingDirectory)/scripts/monitor-bicep-deployment.sh group "$RG" "$DEPLOYMENT"
